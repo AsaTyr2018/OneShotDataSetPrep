@@ -2,7 +2,7 @@
 
 APP_DIR="/opt/OneShot"
 VENV="$APP_DIR/venv"
-REPO="https://example.com/oneshot.git"
+REPO="https://github.com/AsaTyr2018/OneShotDataSetPrep.git"
 
 install() {
     if [ -d "$APP_DIR" ]; then
