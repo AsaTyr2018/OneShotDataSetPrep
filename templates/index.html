@@ -35,7 +35,11 @@
 </head>
 <body class="glitch-edge text-center p-8 overflow-x-hidden">
     {% if current_user.is_authenticated %}
-    <p class="mb-4">Logged in as {{ current_user.username }} | <a class="text-teal-300" href="{{ url_for('logout') }}">Logout</a></p>
+    <p class="mb-4">Logged in as {{ current_user.username }} |
+    {% if current_user.is_admin %}
+    <a class="text-teal-300" href="{{ url_for('admin_users') }}">User Admin</a> |
+    {% endif %}
+    <a class="text-teal-300" href="{{ url_for('logout') }}">Logout</a></p>
     {% else %}
     <p class="mb-4"><a class="text-teal-300" href="{{ url_for('login') }}">Login</a> or <a class="text-teal-300" href="{{ url_for('register') }}">Register</a></p>
     {% endif %}
