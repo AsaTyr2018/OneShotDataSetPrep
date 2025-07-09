@@ -37,3 +37,15 @@ The repository ships with `maintainer.sh` to ease installation and updates. By d
 ```
 
 All commands run using the virtual environment in `/opt/OneShot/venv`.
+
+## Service Installation
+
+Use `install_service.sh` to register the web UI as a systemd service. Run the
+script as root after the maintainer installation:
+
+```bash
+sudo ./install_service.sh
+```
+
+This writes `/etc/systemd/system/oneshot.service` and starts the service
+immediately so the application is available on boot.
