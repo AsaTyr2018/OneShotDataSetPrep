@@ -61,6 +61,9 @@
                                 <input type="text" name="username" placeholder="Share with user" class="text-gray-900 p-1" required>
                                 <button type="submit" class="bg-teal-600 text-white px-2 py-1 rounded">Share</button>
                             </form>
+                            <form action="{{ url_for('delete_dataset', dataset_id=ds.id) }}" method="POST" class="mt-2">
+                                <button type="submit" class="bg-red-600 text-white px-2 py-1 rounded">Delete</button>
+                            </form>
                             {% endif %}
                         </td>
                     </tr>
