@@ -34,6 +34,11 @@
     </style>
 </head>
 <body class="glitch-edge text-center p-8 overflow-x-hidden">
+    {% if current_user.is_authenticated %}
+    <p class="mb-4">Logged in as {{ current_user.username }} | <a class="text-teal-300" href="{{ url_for('logout') }}">Logout</a></p>
+    {% else %}
+    <p class="mb-4"><a class="text-teal-300" href="{{ url_for('login') }}">Login</a> or <a class="text-teal-300" href="{{ url_for('register') }}">Register</a></p>
+    {% endif %}
     <h1 class="text-4xl font-bold mb-8 text-teal-400 tracking-wide">OneShot Dataset Prep</h1>
     <div class="flex flex-col md:flex-row justify-center md:space-x-8 space-y-8 md:space-y-0">
         <div>
@@ -43,10 +48,16 @@
                     <tr><th class="px-4 py-2 border border-gray-700">Dataset</th></tr>
                 </thead>
                 <tbody>
-                    {% for file in archives %}
+                    {% for ds in datasets %}
                     <tr>
                         <td class="border border-gray-700 px-4 py-2 text-left">
-                            <a href="{{ url_for('download', filename=file) }}" class="text-teal-300 hover:underline">{{ file }}</a>
+                            <a href="{{ url_for('download', filename=ds.filename) }}" class="text-teal-300 hover:underline">{{ ds.filename }}</a>
+                            {% if ds.owner_id == current_user.id %}
+                            <form action="{{ url_for('share', dataset_id=ds.id) }}" method="POST" class="mt-2">
+                                <input type="text" name="username" placeholder="Share with user" class="text-gray-900 p-1" required>
+                                <button type="submit" class="bg-teal-600 text-white px-2 py-1 rounded">Share</button>
+                            </form>
+                            {% endif %}
                         </td>
                     </tr>
                     {% else %}
