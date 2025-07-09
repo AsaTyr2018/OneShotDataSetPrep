@@ -164,6 +164,22 @@ def share(dataset_id: int):
     return redirect(url_for("index"))
 
 
+@app.route("/delete/<int:dataset_id>", methods=["POST"])
+@login_required
+def delete_dataset(dataset_id: int):
+    """Remove a dataset if the current user is the owner."""
+    dataset = Dataset.query.get(dataset_id)
+    if not dataset or dataset.owner_id != current_user.id:
+        return "Forbidden", 403
+
+    path = ARCHIVE_DIR / dataset.filename
+    path.unlink(missing_ok=True)
+    DatasetShare.query.filter_by(dataset_id=dataset_id).delete()
+    models_db.session.delete(dataset)
+    models_db.session.commit()
+    return redirect(url_for("index"))
+
+
 @app.route("/admin/users", methods=["GET", "POST"])
 @login_required
 def admin_users():
