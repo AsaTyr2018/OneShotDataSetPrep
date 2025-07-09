@@ -7,9 +7,30 @@
 </head>
 <body class="bg-gray-100 text-center p-8">
     <h1 class="text-3xl font-bold mb-4">OneShot Dataset Prep</h1>
-    <form action="/upload" method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded shadow-md inline-block">
-        <input type="file" name="image" accept="image/*" required class="mb-4"><br>
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Upload & Generate ZIP</button>
-    </form>
+    <div class="flex justify-center space-x-8">
+        <div>
+            <h2 class="text-xl font-semibold mb-2">Archiv</h2>
+            <table class="table-auto border-collapse">
+                <thead>
+                    <tr><th class="px-4 py-2 border">Dataset</th></tr>
+                </thead>
+                <tbody>
+                    {% for file in archives %}
+                    <tr>
+                        <td class="border px-4 py-2 text-left">
+                            <a href="{{ url_for('download', filename=file) }}" class="text-blue-600 underline">{{ file }}</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td class="border px-4 py-2">No datasets yet</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <form action="/upload" method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded shadow-md">
+            <input type="file" name="image" accept="image/*" required class="mb-4"><br>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Upload & Generate ZIP</button>
+        </form>
+    </div>
 </body>
 </html>

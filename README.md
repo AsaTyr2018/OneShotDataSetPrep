@@ -13,7 +13,10 @@ Creates 14 cropped and flipped images inside `output_dir`.
 ## Webserver API
 
 After installing the requirements, you can start a small Flask server that
-accepts image uploads and returns a ZIP archive with the processed files.
+accepts image uploads. Generated datasets are stored in an archive directory and
+can be downloaded from the web interface.
+Only the ten most recent datasets are kept; older archives are deleted
+automatically.
 
 ```bash
 python run.py
