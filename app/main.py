@@ -164,6 +164,40 @@ def share(dataset_id: int):
     return redirect(url_for("index"))
 
 
+@app.route("/admin/users", methods=["GET", "POST"])
+@login_required
+def admin_users():
+    if not current_user.is_admin:
+        return "Forbidden", 403
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if not username or not password:
+            return "Invalid", 400
+        if User.query.filter_by(username=username).first():
+            return "User exists", 400
+        user = User(username=username, password_hash=generate_password_hash(password))
+        models_db.session.add(user)
+        models_db.session.commit()
+        return redirect(url_for("admin_users"))
+    users = User.query.all()
+    return render_template("admin_users.html", users=users)
+
+
+@app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
+@login_required
+def admin_delete_user(user_id: int):
+    if not current_user.is_admin:
+        return "Forbidden", 403
+    user = User.query.get(user_id)
+    if user:
+        DatasetShare.query.filter_by(user_id=user.id).delete()
+        Dataset.query.filter_by(owner_id=user.id).delete()
+        models_db.session.delete(user)
+        models_db.session.commit()
+    return redirect(url_for("admin_users"))
+
+
 with app.app_context():
     models_db.create_all()
 
