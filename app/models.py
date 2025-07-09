@@ -26,3 +26,30 @@ class DatasetShare(db.Model):
     dataset_id = db.Column(db.Integer, db.ForeignKey("dataset.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
+
+class Setting(db.Model):
+    """Key/value store for simple configuration flags."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(80), unique=True, nullable=False)
+    bool_value = db.Column(db.Boolean, default=True)
+
+    @classmethod
+    def get_bool(cls, key: str, default: bool = True) -> bool:
+        setting = cls.query.filter_by(key=key).first()
+        if setting is None:
+            setting = cls(key=key, bool_value=default)
+            db.session.add(setting)
+            db.session.commit()
+        return bool(setting.bool_value)
+
+    @classmethod
+    def set_bool(cls, key: str, value: bool) -> None:
+        setting = cls.query.filter_by(key=key).first()
+        if setting is None:
+            setting = cls(key=key, bool_value=value)
+            db.session.add(setting)
+        else:
+            setting.bool_value = value
+        db.session.commit()
+
