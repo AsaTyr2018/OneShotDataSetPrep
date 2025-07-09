@@ -4,32 +4,60 @@
     <meta charset="UTF-8">
     <title>OneShot Dataset Prep</title>
     <link rel="stylesheet" href="/static/tailwind.min.css">
+    <style>
+        body {
+            background: #0d0d0d;
+            color: #e0e0e0;
+            font-family: 'Roboto', sans-serif;
+        }
+        .glitch-edge::before,
+        .glitch-edge::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: repeating-linear-gradient(180deg, rgba(0,255,255,0.4) 0, rgba(255,0,255,0.4) 2px, rgba(0,255,255,0.4) 4px);
+            pointer-events: none;
+            z-index: 50;
+            animation: glitch 1s infinite linear;
+        }
+        .glitch-edge::before { left: 0; }
+        .glitch-edge::after { right: 0; }
+        @keyframes glitch {
+            0%,100%{transform:translateX(0)}
+            20%{transform:translateX(-2px)}
+            40%{transform:translateX(2px)}
+            60%{transform:translateX(-2px)}
+            80%{transform:translateX(2px)}
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-center p-8">
-    <h1 class="text-3xl font-bold mb-4">OneShot Dataset Prep</h1>
-    <div class="flex justify-center space-x-8">
+<body class="glitch-edge text-center p-8 overflow-x-hidden">
+    <h1 class="text-4xl font-bold mb-8 text-teal-400 tracking-wide">OneShot Dataset Prep</h1>
+    <div class="flex flex-col md:flex-row justify-center md:space-x-8 space-y-8 md:space-y-0">
         <div>
-            <h2 class="text-xl font-semibold mb-2">Archiv</h2>
-            <table class="table-auto border-collapse">
+            <h2 class="text-2xl font-semibold mb-4 text-pink-400">Archive</h2>
+            <table class="table-auto border-collapse bg-gray-800 bg-opacity-50 rounded">
                 <thead>
-                    <tr><th class="px-4 py-2 border">Dataset</th></tr>
+                    <tr><th class="px-4 py-2 border border-gray-700">Dataset</th></tr>
                 </thead>
                 <tbody>
                     {% for file in archives %}
                     <tr>
-                        <td class="border px-4 py-2 text-left">
-                            <a href="{{ url_for('download', filename=file) }}" class="text-blue-600 underline">{{ file }}</a>
+                        <td class="border border-gray-700 px-4 py-2 text-left">
+                            <a href="{{ url_for('download', filename=file) }}" class="text-teal-300 hover:underline">{{ file }}</a>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td class="border px-4 py-2">No datasets yet</td></tr>
+                    <tr><td class="border border-gray-700 px-4 py-2">No datasets yet</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        <form action="/upload" method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded shadow-md">
-            <input type="file" name="image" accept="image/*" required class="mb-4"><br>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Upload & Generate ZIP</button>
+        <form action="/upload" method="POST" enctype="multipart/form-data" class="bg-gray-800 bg-opacity-50 p-6 rounded shadow-lg">
+            <input type="file" name="image" accept="image/*" required class="mb-4 block w-full text-gray-200 bg-gray-900 p-2 border border-gray-700 rounded">
+            <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded transition-colors">Upload & Generate ZIP</button>
         </form>
     </div>
 </body>
