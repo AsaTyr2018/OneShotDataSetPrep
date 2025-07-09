@@ -4,19 +4,47 @@
     <meta charset="UTF-8">
     <title>User Management</title>
     <link rel="stylesheet" href="/static/tailwind.min.css">
+    <style>
+        body {
+            background: #0d0d0d;
+            color: #e0e0e0;
+            font-family: 'Roboto', sans-serif;
+        }
+        .glitch-edge::before,
+        .glitch-edge::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            background: repeating-linear-gradient(180deg, rgba(0,255,255,0.4) 0, rgba(255,0,255,0.4) 2px, rgba(0,255,255,0.4) 4px);
+            pointer-events: none;
+            z-index: 50;
+            animation: glitch 1s infinite linear;
+        }
+        .glitch-edge::before { left: 0; }
+        .glitch-edge::after { right: 0; }
+        @keyframes glitch {
+            0%,100%{transform:translateX(0)}
+            20%{transform:translateX(-2px)}
+            40%{transform:translateX(2px)}
+            60%{transform:translateX(-2px)}
+            80%{transform:translateX(2px)}
+        }
+    </style>
 </head>
-<body class="p-8 text-center">
-    <h1 class="text-2xl mb-4">User Administration</h1>
-    <p class="mb-4"><a class="text-teal-300" href="{{ url_for('index') }}">Home</a></p>
-    <table class="table-auto mx-auto mb-6">
+<body class="glitch-edge text-center p-8 overflow-x-hidden">
+    <h1 class="text-4xl font-bold mb-4 text-teal-400 tracking-wide">User Administration</h1>
+    <p class="mb-6"><a class="text-teal-300" href="{{ url_for('index') }}">Home</a></p>
+    <table class="table-auto mx-auto mb-8 border-collapse bg-gray-800 bg-opacity-50 rounded">
         <thead>
-            <tr><th class="px-4 py-2">Username</th><th class="px-4 py-2">Action</th></tr>
+            <tr><th class="px-4 py-2 border border-gray-700">Username</th><th class="px-4 py-2 border border-gray-700">Action</th></tr>
         </thead>
         <tbody>
         {% for u in users %}
             <tr>
-                <td class="border px-4 py-2">{{ u.username }}</td>
-                <td class="border px-4 py-2">
+                <td class="border border-gray-700 px-4 py-2">{{ u.username }}</td>
+                <td class="border border-gray-700 px-4 py-2">
                     <form action="{{ url_for('admin_delete_user', user_id=u.id) }}" method="POST">
                         <button type="submit" class="bg-red-600 text-white px-2 py-1 rounded">Delete</button>
                     </form>
@@ -25,11 +53,11 @@
         {% endfor %}
         </tbody>
     </table>
-    <h2 class="text-xl mb-2">Create User</h2>
-    <form action="{{ url_for('admin_users') }}" method="POST" class="space-y-2 inline-block">
-        <input type="text" name="username" placeholder="Username" required class="border p-2 w-full">
-        <input type="password" name="password" placeholder="Password" required class="border p-2 w-full">
-        <button type="submit" class="bg-green-600 text-white px-4 py-2">Create</button>
+    <h2 class="text-2xl font-semibold mb-2 text-pink-400">Create User</h2>
+    <form action="{{ url_for('admin_users') }}" method="POST" class="space-y-2 inline-block bg-gray-800 bg-opacity-50 p-4 rounded">
+        <input type="text" name="username" placeholder="Username" required class="border border-gray-700 p-2 w-full bg-gray-900 text-gray-200">
+        <input type="password" name="password" placeholder="Password" required class="border border-gray-700 p-2 w-full bg-gray-900 text-gray-200">
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors">Create</button>
     </form>
 </body>
 </html>
