@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, render_template
 from PIL import Image
 from io import BytesIO
 import zipfile
@@ -7,8 +7,17 @@ from pathlib import Path
 from .processing import crop_and_flip
 
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder=str(Path(__file__).resolve().parent.parent / "templates"),
+    static_folder=str(Path(__file__).resolve().parent.parent / "static"),
+)
 
+
+@app.route("/", methods=["GET"])
+def index():
+    """Render upload form page."""
+    return render_template("index.html")
 
 @app.route("/upload", methods=["POST"])
 def upload():
