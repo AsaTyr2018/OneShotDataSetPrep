@@ -13,12 +13,24 @@ install() {
     python3 -m venv "$VENV"
     "$VENV/bin/pip" install -r "$APP_DIR/requirements.txt"
     echo "Installed to $APP_DIR"
+
+    read -r -p "Install systemd service? [y/N] " ans
+    if [[ $ans =~ ^[Yy]$ ]]; then
+        "$APP_DIR/install_service.sh"
+    fi
 }
 
 update() {
     [ -d "$APP_DIR" ] || { echo "Not installed" >&2; return; }
+    local was_active=0
+    if systemctl is-active --quiet oneshot.service; then
+        was_active=1
+    fi
     git -C "$APP_DIR" pull
     "$VENV/bin/pip" install -r "$APP_DIR/requirements.txt"
+    if [ $was_active -eq 1 ]; then
+        systemctl restart oneshot.service
+    fi
 }
 
 uninstall() {
