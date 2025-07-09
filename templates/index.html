@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OneShot Dataset Prep</title>
+    <link rel="stylesheet" href="/static/tailwind.min.css">
+</head>
+<body class="bg-gray-100 text-center p-8">
+    <h1 class="text-3xl font-bold mb-4">OneShot Dataset Prep</h1>
+    <form action="/upload" method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded shadow-md inline-block">
+        <input type="file" name="image" accept="image/*" required class="mb-4"><br>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Upload & Generate ZIP</button>
+    </form>
+</body>
+</html>
