@@ -13,3 +13,8 @@ def test_crop_and_flip():
     filenames = [name for name, _ in result]
     assert 'test_top_left_flip.jpg' in filenames
     assert 'test_bottom_right.jpg' in filenames
+    # ensure buffers are valid images and rewound
+    for name, buf in result:
+        buf.seek(0)
+        loaded = Image.open(buf)
+        loaded.verify()

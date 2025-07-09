@@ -47,5 +47,6 @@ def crop_and_flip(image: Image.Image, base_name: str, ext: str) -> list[tuple[st
         flipped.save(flip_buffer, format=fmt)
         flip_buffer.seek(0)
         outputs.append((flip_name, flip_buffer))
+        buffer.seek(0)
 
     return outputs
