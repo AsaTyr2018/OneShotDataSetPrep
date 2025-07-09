@@ -12,6 +12,8 @@
         <input type="password" name="password" placeholder="Password" required class="border p-2 w-full">
         <button type="submit" class="bg-blue-600 text-white px-4 py-2">Login</button>
     </form>
+    {% if registration_enabled %}
     <p class="mt-4"><a class="text-teal-300" href="{{ url_for('register') }}">Register</a></p>
+    {% endif %}
 </body>
 </html>

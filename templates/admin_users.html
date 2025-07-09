@@ -36,6 +36,14 @@
 <body class="glitch-edge text-center p-8 overflow-x-hidden">
     <h1 class="text-4xl font-bold mb-4 text-teal-400 tracking-wide">User Administration</h1>
     <p class="mb-6"><a class="text-teal-300" href="{{ url_for('index') }}">Home</a></p>
+    <form action="{{ url_for('admin_users') }}" method="POST" class="mb-6 inline-block bg-gray-800 bg-opacity-50 p-2 rounded">
+        <input type="hidden" name="action" value="toggle_registration">
+        <label class="inline-flex items-center">
+            <input type="checkbox" name="registration_enabled" class="mr-2" {% if registration_enabled %}checked{% endif %}>
+            <span>Enable public registration</span>
+        </label>
+        <button type="submit" class="ml-4 bg-blue-600 text-white px-2 py-1 rounded">Save</button>
+    </form>
     <table class="table-auto mx-auto mb-8 border-collapse bg-gray-800 bg-opacity-50 rounded">
         <thead>
             <tr><th class="px-4 py-2 border border-gray-700">Username</th><th class="px-4 py-2 border border-gray-700">Action</th></tr>
@@ -55,6 +63,7 @@
     </table>
     <h2 class="text-2xl font-semibold mb-2 text-pink-400">Create User</h2>
     <form action="{{ url_for('admin_users') }}" method="POST" class="space-y-2 inline-block bg-gray-800 bg-opacity-50 p-4 rounded">
+        <input type="hidden" name="action" value="create_user">
         <input type="text" name="username" placeholder="Username" required class="border border-gray-700 p-2 w-full bg-gray-900 text-gray-200">
         <input type="password" name="password" placeholder="Password" required class="border border-gray-700 p-2 w-full bg-gray-900 text-gray-200">
         <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors">Create</button>

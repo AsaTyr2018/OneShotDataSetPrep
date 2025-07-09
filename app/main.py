@@ -35,9 +35,14 @@ app.config["SECRET_KEY"] = "replace-me"
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
-from .models import db as models_db, User, Dataset, DatasetShare
+from .models import db as models_db, User, Dataset, DatasetShare, Setting
 
 models_db.init_app(app)
+
+
+@app.context_processor
+def inject_settings():
+    return {"registration_enabled": Setting.get_bool("registration_enabled", True)}
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -50,6 +55,8 @@ ARCHIVE_DIR.mkdir(exist_ok=True)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    if not Setting.get_bool("registration_enabled", True):
+        return "Registration disabled", 403
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -186,18 +193,25 @@ def admin_users():
     if not current_user.is_admin:
         return "Forbidden", 403
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        if not username or not password:
-            return "Invalid", 400
-        if User.query.filter_by(username=username).first():
-            return "User exists", 400
-        user = User(username=username, password_hash=generate_password_hash(password))
-        models_db.session.add(user)
-        models_db.session.commit()
-        return redirect(url_for("admin_users"))
+        action = request.form.get("action")
+        if action == "create_user":
+            username = request.form.get("username")
+            password = request.form.get("password")
+            if not username or not password:
+                return "Invalid", 400
+            if User.query.filter_by(username=username).first():
+                return "User exists", 400
+            user = User(username=username, password_hash=generate_password_hash(password))
+            models_db.session.add(user)
+            models_db.session.commit()
+            return redirect(url_for("admin_users"))
+        elif action == "toggle_registration":
+            enabled = request.form.get("registration_enabled") == "on"
+            Setting.set_bool("registration_enabled", enabled)
+            return redirect(url_for("admin_users"))
     users = User.query.all()
-    return render_template("admin_users.html", users=users)
+    reg_enabled = Setting.get_bool("registration_enabled", True)
+    return render_template("admin_users.html", users=users, registration_enabled=reg_enabled)
 
 
 @app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
