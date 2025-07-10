@@ -10,30 +10,21 @@
             color: #e0e0e0;
             font-family: 'Roboto', sans-serif;
         }
-        .glitch-edge::before,
-        .glitch-edge::after {
-            content: '';
+        .matrix {
             position: fixed;
             top: 0;
             bottom: 0;
-            width: 8px;
-            background: repeating-linear-gradient(180deg, rgba(0,255,255,0.4) 0, rgba(255,0,255,0.4) 2px, rgba(0,255,255,0.4) 4px);
+            width: 33vw;
             pointer-events: none;
-            z-index: 50;
-            animation: glitch 1s infinite linear;
+            z-index: 0;
         }
-        .glitch-edge::before { left: 0; }
-        .glitch-edge::after { right: 0; }
-        @keyframes glitch {
-            0%,100%{transform:translateX(0)}
-            20%{transform:translateX(-2px)}
-            40%{transform:translateX(2px)}
-            60%{transform:translateX(-2px)}
-            80%{transform:translateX(2px)}
-        }
+        #matrix-left { left: 0; }
+        #matrix-right { right: 0; transform: scaleX(-1); }
     </style>
 </head>
-<body class="glitch-edge text-center p-8 overflow-x-hidden">
+<body class="text-center p-8 overflow-x-hidden">
+    <canvas id="matrix-left" class="matrix"></canvas>
+    <canvas id="matrix-right" class="matrix"></canvas>
     <h1 class="text-4xl font-bold mb-4 text-teal-400 tracking-wide">User Administration</h1>
     <p class="mb-6"><a class="text-teal-300" href="{{ url_for('index') }}">Home</a></p>
     <form action="{{ url_for('admin_users') }}" method="POST" class="mb-6 inline-block bg-gray-800 bg-opacity-50 p-2 rounded">
@@ -68,5 +59,36 @@
         <input type="password" name="password" placeholder="Password" required class="border border-gray-700 p-2 w-full bg-gray-900 text-gray-200">
         <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors">Create</button>
     </form>
+    <script>
+    function startMatrix(canvas) {
+        const ctx = canvas.getContext('2d');
+        const fontSize = 16;
+        const width = canvas.offsetWidth;
+        const height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        const columns = Math.floor(width / fontSize);
+        const drops = Array(columns).fill(1);
+        function draw() {
+            ctx.fillStyle = 'rgba(0,0,0,0.05)';
+            ctx.fillRect(0,0,width,height);
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px monospace';
+            for (let i=0;i<drops.length;i++) {
+                const char = String.fromCharCode(0x30A0 + Math.random()*96);
+                ctx.fillText(char, i*fontSize, drops[i]*fontSize);
+                if (drops[i]*fontSize > height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(draw, 50);
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        startMatrix(document.getElementById('matrix-left'));
+        startMatrix(document.getElementById('matrix-right'));
+    });
+    </script>
 </body>
 </html>
