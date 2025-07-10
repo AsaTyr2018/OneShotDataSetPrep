@@ -11,16 +11,17 @@ management. All binary dependencies are installed via the supplied
    create accounts using the maintainer script. After logging in they are
 directed to the upload page.
 2. **Uploading** – Drag and drop an image onto the form. The server generates 14
-   cropped and flipped images and stores them as a ZIP file in the user's
-   personal directory or the selected team directory. Each user may keep up to
-   ten personal datasets while every team can store fifty datasets. The page
-   refreshes after processing so the ZIP can be downloaded from the archive
-   list.
+   cropped and flipped images and stores them as a ZIP file in either the user's
+   archive directory (`archives/user_<id>`) or the selected team directory
+   (`archives/team_<id>`). Each user may keep up to ten personal datasets
+   (configurable via `ARCHIVE_LIMIT_USER`) while every team can store fifty
+   (`ARCHIVE_LIMIT_TEAM`). The page refreshes after processing so the ZIP can be
+   downloaded from the archive list.
 3. **Deletion** – Users remove old datasets themselves once the quota is
    reached.
-4. **Teams** – A user can create a team and invite other members. Uploads may be
-   stored in a team archive which is shared by all members. Personal dataset
-   sharing has been removed.
+4. **Teams** – Team creation is restricted to administrators or users with the
+   `can_create_team` permission. Uploads may be stored in a shared team archive
+   that all members can access. Personal dataset sharing has been removed.
 
 ## Admin view
 
@@ -35,8 +36,11 @@ Administrators have two ways to manage the system:
 ## Team management
 
 The creator of a team becomes its head and can invite members from the
-"Manage Team" page. Every team has its own archive directory and may store up to
-fifty uploads (configurable via the `ARCHIVE_LIMIT_TEAM` environment variable).
+"Manage Team" page. Only admins or users granted the `can_create_team`
+permission can start new teams. Archives are stored under
+`archives/team_<id>` and may hold up to fifty uploads by default (controlled by
+`ARCHIVE_LIMIT_TEAM`). Personal uploads are saved in `archives/user_<id>` and
+are limited via `ARCHIVE_LIMIT_USER`.
 
 ## Setup using `maintainer.sh`
 
