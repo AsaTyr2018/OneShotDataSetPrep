@@ -68,4 +68,6 @@ Developers who simply cloned the repository can start the Flask server directly:
 python run.py
 ```
 
-The web interface will be available on port `7860` by default.
+The web interface will be available on port `7860` by default.  To change the
+port, edit ``config.json`` and set the ``"port"`` value before running the
+application.
