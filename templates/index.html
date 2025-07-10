@@ -28,13 +28,19 @@
     <h1 class="text-4xl font-bold mb-8 text-teal-400 tracking-wide">OneShot Dataset Prep</h1>
     {% if current_user.is_authenticated %}
     <p class="mb-4">Logged in as {{ current_user.username }} |
-    {% if current_user.is_admin %}
-    <a class="text-teal-300" href="{{ url_for('admin_users') }}">User Admin</a> |
-    {% endif %}
-    {% if current_user.is_admin or current_user.can_create_team %}
-    <a class="text-teal-300" href="{{ url_for('create_team') }}">Create Team</a> |
-    {% endif %}
-    <a class="text-teal-300" href="{{ url_for('logout') }}">Logout</a></p>
+        {% if current_user.is_admin %}
+        <a class="text-teal-300" href="{{ url_for('admin_users') }}">User Admin</a> |
+        {% endif %}
+        {% if current_user.is_admin or current_user.can_create_team %}
+        <a class="text-teal-300" href="{{ url_for('create_team') }}">Create Team</a> |
+        {% endif %}
+        <a class="text-teal-300" href="{{ url_for('logout') }}">Logout</a></p>
+    <p class="mb-4">
+        Personal quota: {{ personal_count }}/{{ personal_limit }}<br>
+        {% for t, c in team_data %}
+        Team {{ t.name }}: {{ c }}/{{ team_limit }}{% if not loop.last %}<br>{% endif %}
+        {% endfor %}
+    </p>
     {% else %}
     <p class="mb-4"><a class="text-teal-300" href="{{ url_for('login') }}">Login</a>{% if registration_enabled %} or <a class="text-teal-300" href="{{ url_for('register') }}">Register</a>{% endif %}</p>
     {% endif %}
@@ -70,10 +76,6 @@
                             <a href="{{ url_for('download', filename=ds.filename) }}" class="text-teal-300 hover:underline">{{ ds.filename }}</a>
                             {% if ds.team_id %}<span class="text-xs ml-2 text-gray-400">(Team {{ ds.team.name }})</span>{% endif %}
                             {% if ds.owner_id == current_user.id %}
-                            <form action="{{ url_for('share', dataset_id=ds.id) }}" method="POST" class="mt-2">
-                                <input type="text" name="username" placeholder="Share with user" class="text-gray-900 p-1" required>
-                                <button type="submit" class="bg-teal-600 text-white px-2 py-1 rounded">Share</button>
-                            </form>
                             <form action="{{ url_for('delete_dataset', dataset_id=ds.id) }}" method="POST" class="mt-2">
                                 <button type="submit" class="bg-red-600 text-white px-2 py-1 rounded">Delete</button>
                             </form>
