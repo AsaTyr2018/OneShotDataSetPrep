@@ -19,7 +19,8 @@ from io import BytesIO
 import zipfile
 from pathlib import Path
 import os
-import time
+import random
+from datetime import datetime
 
 from .processing import crop_and_flip
 
@@ -122,7 +123,9 @@ def upload():
 
     zip_buffer.seek(0)
 
-    archive_name = f"{base_name}_{int(time.time())}.zip"
+    timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+    random_part = random.randint(0, 99999)
+    archive_name = f"{current_user.username}_{timestamp}_{random_part:05}.zip"
     archive_path = ARCHIVE_DIR / archive_name
     with open(archive_path, "wb") as f:
         f.write(zip_buffer.getvalue())
