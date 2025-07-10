@@ -13,9 +13,8 @@ directed to the upload page.
 2. **Uploading** – Drag and drop an image onto the form. The server generates 14
    cropped and flipped images and stores them as a ZIP file in either the user's
    archive directory (`archives/user_<id>`) or the selected team directory
-   (`archives/team_<id>`). Each user may keep up to ten personal datasets
-   (configurable via `ARCHIVE_LIMIT_USER`) while every team can store fifty
-   (`ARCHIVE_LIMIT_TEAM`). The page refreshes after processing so the ZIP can be
+   (`archives/team_<id>`). Each user may keep up to ten personal datasets while
+   every team can store fifty by default. The page refreshes after processing so the ZIP can be
    downloaded from the archive list.
 3. **Deletion** – Users remove old datasets themselves once the quota is
    reached.
@@ -32,15 +31,17 @@ Administrators have two ways to manage the system:
   be toggled.
 * The command `./maintainer.sh create-admin <user> <pass>` can create an initial
   admin account on the command line.
+* Adjust dataset quotas by editing `config.json` and setting
+  `"archive_limit_user"` and `"archive_limit_team"`.
 
 ## Team management
 
 The creator of a team becomes its head and can invite members from the
 "Manage Team" page. Only admins or users granted the `can_create_team`
 permission can start new teams. Archives are stored under
-`archives/team_<id>` and may hold up to fifty uploads by default (controlled by
-`ARCHIVE_LIMIT_TEAM`). Personal uploads are saved in `archives/user_<id>` and
-are limited via `ARCHIVE_LIMIT_USER`.
+`archives/team_<id>` and may hold up to fifty uploads by default. Personal
+uploads are saved in `archives/user_<id>` and share the same ten-file limit as
+the personal archive.
 
 ## Setup using `maintainer.sh`
 

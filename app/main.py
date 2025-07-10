@@ -22,6 +22,7 @@ import os
 import random
 from datetime import datetime
 import shutil
+import json
 
 from .processing import crop_and_flip
 
@@ -62,8 +63,26 @@ def load_user(user_id):
 ARCHIVE_DIR = Path(__file__).resolve().parent.parent / "archives"
 ARCHIVE_DIR.mkdir(exist_ok=True)
 
-ARCHIVE_LIMIT_USER = int(os.getenv("ARCHIVE_LIMIT_USER", "10"))
-ARCHIVE_LIMIT_TEAM = int(os.getenv("ARCHIVE_LIMIT_TEAM", "50"))
+
+def _load_config() -> dict:
+    """Read ``config.json`` from the project root if available."""
+    path = Path(__file__).resolve().parent.parent / "config.json"
+    if path.exists():
+        try:
+            with path.open() as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+_config = _load_config()
+ARCHIVE_LIMIT_USER = int(
+    _config.get("archive_limit_user", os.getenv("ARCHIVE_LIMIT_USER", "10"))
+)
+ARCHIVE_LIMIT_TEAM = int(
+    _config.get("archive_limit_team", os.getenv("ARCHIVE_LIMIT_TEAM", "50"))
+)
 
 
 @app.route("/register", methods=["GET", "POST"])
