@@ -4,8 +4,27 @@
     <meta charset="UTF-8">
     <title>Team Archive</title>
     <link rel="stylesheet" href="/static/tailwind.min.css">
+    <style>
+        body {
+            background: #0d0d0d;
+            color: #e0e0e0;
+            font-family: 'Roboto', sans-serif;
+        }
+        .matrix {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 33vw;
+            pointer-events: none;
+            z-index: 0;
+        }
+        #matrix-left { left: 0; }
+        #matrix-right { right: 0; transform: scaleX(-1); }
+    </style>
 </head>
-<body class="text-center p-8">
+<body class="text-center p-8 overflow-x-hidden">
+    <canvas id="matrix-left" class="matrix"></canvas>
+    <canvas id="matrix-right" class="matrix"></canvas>
     <h1 class="text-3xl mb-4">{{ team.name }} Archive</h1>
     <table class="table-auto mx-auto border-collapse bg-gray-800 bg-opacity-50 rounded">
         <thead>
@@ -24,5 +43,36 @@
         </tbody>
     </table>
     <p class="mt-4"><a class="text-teal-300" href="{{ url_for('index') }}">Back</a></p>
+    <script>
+    function startMatrix(canvas) {
+        const ctx = canvas.getContext('2d');
+        const fontSize = 16;
+        const width = canvas.offsetWidth;
+        const height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        const columns = Math.floor(width / fontSize);
+        const drops = Array(columns).fill(1);
+        function draw() {
+            ctx.fillStyle = 'rgba(0,0,0,0.05)';
+            ctx.fillRect(0,0,width,height);
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px monospace';
+            for (let i=0;i<drops.length;i++) {
+                const char = String.fromCharCode(0x30A0 + Math.random()*96);
+                ctx.fillText(char, i*fontSize, drops[i]*fontSize);
+                if (drops[i]*fontSize > height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(draw, 50);
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        startMatrix(document.getElementById('matrix-left'));
+        startMatrix(document.getElementById('matrix-right'));
+    });
+    </script>
 </body>
 </html>
