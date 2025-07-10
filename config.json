@@ -1,3 +1,5 @@
 {
-  "port": 7860
+  "port": 7860,
+  "archive_limit_user": 10,
+  "archive_limit_team": 50
 }
