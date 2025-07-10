@@ -35,10 +35,12 @@
         <a class="text-teal-300" href="{{ url_for('create_team') }}">Create Team</a> |
         {% endif %}
         <a class="text-teal-300" href="{{ url_for('logout') }}">Logout</a></p>
+    {% set personal_full = personal_count >= personal_limit %}
     <p class="mb-4">
-        Personal quota: {{ personal_count }}/{{ personal_limit }}<br>
+        Personal quota: <span class="{% if personal_full %}text-red-500{% endif %}">{{ personal_count }}/{{ personal_limit }}</span><br>
         {% for t, c in team_data %}
-        Team {{ t.name }}: {{ c }}/{{ team_limit }}{% if not loop.last %}<br>{% endif %}
+        {% set team_full = c >= team_limit %}
+        Team {{ t.name }}: <span class="{% if team_full %}text-red-500{% endif %}">{{ c }}/{{ team_limit }}</span>{% if not loop.last %}<br>{% endif %}
         {% endfor %}
     </p>
     {% else %}
@@ -50,7 +52,7 @@
                 Drop image here or click to select
                 <input id="file-input" type="file" name="image" accept="image/*" required class="hidden">
             </div>
-            <select name="team_id" class="mb-4 bg-gray-900 text-gray-200 border border-gray-700 p-1">
+            <select id="team-select" name="team_id" class="mb-4 bg-gray-900 text-gray-200 border border-gray-700 p-1">
                 <option value="">Personal Space</option>
                 {% for t in teams %}
                 <option value="{{ t.id }}">{{ t.name }}</option>
@@ -105,6 +107,12 @@
             </ul>
         </div>
         <script>
+        const personalFull = {{ 'true' if personal_full else 'false' }};
+        const teamFull = {
+            {% for t, c in team_data %}
+            {{ t.id }}: {{ 'true' if c >= team_limit else 'false' }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        };
         function startMatrix(canvas) {
             const ctx = canvas.getContext('2d');
             const fontSize = 16;
@@ -135,9 +143,30 @@
             const form = document.getElementById('upload-form');
             const input = document.getElementById('file-input');
             const drop = document.getElementById('drop-area');
+            const teamSelect = document.getElementById('team-select');
             const progress = document.getElementById('progress-container');
             const bar = document.getElementById('progress-bar');
             const phaseText = document.getElementById('progress-phase');
+
+            let uploadDisabled = false;
+
+            function updateUploadState() {
+                const sel = teamSelect ? teamSelect.value : '';
+                const full = sel === '' ? personalFull : teamFull[sel];
+                uploadDisabled = !!full;
+                if (uploadDisabled) {
+                    drop.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+                    input.disabled = true;
+                } else {
+                    drop.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+                    input.disabled = false;
+                }
+            }
+
+            if (teamSelect) {
+                teamSelect.addEventListener('change', updateUploadState);
+            }
+            updateUploadState();
 
             startMatrix(document.getElementById('matrix-left'));
             startMatrix(document.getElementById('matrix-right'));
@@ -148,10 +177,12 @@
             }
 
             function startUpload(file) {
+                if (uploadDisabled) {
+                    return;
+                }
                 const xhr = new XMLHttpRequest();
                 const data = new FormData();
                 data.append('image', file);
-                const teamSelect = document.querySelector('select[name="team_id"]');
                 if (teamSelect) {
                     data.append('team_id', teamSelect.value);
                 }
