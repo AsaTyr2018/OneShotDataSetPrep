@@ -11,6 +11,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    can_create_team = db.Column(db.Boolean, default=False)
 
 
 class Team(db.Model):

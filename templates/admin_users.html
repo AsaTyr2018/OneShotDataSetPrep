@@ -37,12 +37,26 @@
     </form>
     <table class="table-auto mx-auto mb-8 border-collapse bg-gray-800 bg-opacity-50 rounded">
         <thead>
-            <tr><th class="px-4 py-2 border border-gray-700">Username</th><th class="px-4 py-2 border border-gray-700">Action</th></tr>
+            <tr>
+                <th class="px-4 py-2 border border-gray-700">Username</th>
+                <th class="px-4 py-2 border border-gray-700">Can Create Team</th>
+                <th class="px-4 py-2 border border-gray-700">Action</th>
+            </tr>
         </thead>
         <tbody>
         {% for u in users %}
             <tr>
                 <td class="border border-gray-700 px-4 py-2">{{ u.username }}</td>
+                <td class="border border-gray-700 px-4 py-2">
+                    <form action="{{ url_for('admin_users') }}" method="POST">
+                        <input type="hidden" name="action" value="update_perms">
+                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="can_create_team" class="mr-2" {% if u.can_create_team %}checked{% endif %} onchange="this.form.submit()">
+                            <span></span>
+                        </label>
+                    </form>
+                </td>
                 <td class="border border-gray-700 px-4 py-2">
                     <form action="{{ url_for('admin_delete_user', user_id=u.id) }}" method="POST">
                         <button type="submit" class="bg-red-600 text-white px-2 py-1 rounded">Delete</button>

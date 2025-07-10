@@ -14,6 +14,12 @@ def run_migrations() -> None:
                 text("ALTER TABLE dataset ADD COLUMN team_id INTEGER")
             )
             db.session.commit()
+        cols = [c["name"] for c in inspector.get_columns("user")]
+        if "can_create_team" not in cols:
+            db.session.execute(
+                text("ALTER TABLE user ADD COLUMN can_create_team BOOLEAN DEFAULT 0")
+            )
+            db.session.commit()
         db.create_all()
 
 

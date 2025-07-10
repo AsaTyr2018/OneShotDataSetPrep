@@ -31,7 +31,9 @@
     {% if current_user.is_admin %}
     <a class="text-teal-300" href="{{ url_for('admin_users') }}">User Admin</a> |
     {% endif %}
+    {% if current_user.is_admin or current_user.can_create_team %}
     <a class="text-teal-300" href="{{ url_for('create_team') }}">Create Team</a> |
+    {% endif %}
     <a class="text-teal-300" href="{{ url_for('logout') }}">Logout</a></p>
     {% else %}
     <p class="mb-4"><a class="text-teal-300" href="{{ url_for('login') }}">Login</a>{% if registration_enabled %} or <a class="text-teal-300" href="{{ url_for('register') }}">Register</a>{% endif %}</p>
