@@ -31,6 +31,7 @@
     {% if current_user.is_admin %}
     <a class="text-teal-300" href="{{ url_for('admin_users') }}">User Admin</a> |
     {% endif %}
+    <a class="text-teal-300" href="{{ url_for('create_team') }}">Create Team</a> |
     <a class="text-teal-300" href="{{ url_for('logout') }}">Logout</a></p>
     {% else %}
     <p class="mb-4"><a class="text-teal-300" href="{{ url_for('login') }}">Login</a>{% if registration_enabled %} or <a class="text-teal-300" href="{{ url_for('register') }}">Register</a>{% endif %}</p>
@@ -41,6 +42,12 @@
                 Drop image here or click to select
                 <input id="file-input" type="file" name="image" accept="image/*" required class="hidden">
             </div>
+            <select name="team_id" class="mb-4 bg-gray-900 text-gray-200 border border-gray-700 p-1">
+                <option value="">Personal Space</option>
+                {% for t in teams %}
+                <option value="{{ t.id }}">{{ t.name }}</option>
+                {% endfor %}
+            </select>
             <div id="progress-container" class="hidden mt-4">
                 <div class="w-full bg-gray-700 rounded h-4">
                     <div id="progress-bar" class="bg-teal-500 h-4 rounded" style="width:0%"></div>
@@ -59,6 +66,7 @@
                     <tr>
                         <td class="border border-gray-700 px-4 py-2 text-left">
                             <a href="{{ url_for('download', filename=ds.filename) }}" class="text-teal-300 hover:underline">{{ ds.filename }}</a>
+                            {% if ds.team_id %}<span class="text-xs ml-2 text-gray-400">(Team {{ ds.team.name }})</span>{% endif %}
                             {% if ds.owner_id == current_user.id %}
                             <form action="{{ url_for('share', dataset_id=ds.id) }}" method="POST" class="mt-2">
                                 <input type="text" name="username" placeholder="Share with user" class="text-gray-900 p-1" required>
@@ -123,6 +131,10 @@
                 const xhr = new XMLHttpRequest();
                 const data = new FormData();
                 data.append('image', file);
+                const teamSelect = document.querySelector('select[name="team_id"]');
+                if (teamSelect) {
+                    data.append('team_id', teamSelect.value);
+                }
                 xhr.open('POST', '/upload');
                 xhr.withCredentials = true;
 

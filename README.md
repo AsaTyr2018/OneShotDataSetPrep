@@ -18,6 +18,8 @@ directed to the upload page.
    user by entering their username. Shared datasets appear in both users'
    archive list.
 4. **Deletion** – Each user can delete the datasets they own at any time.
+5. **Teams** – A user can create a team and invite other members. Uploads may be
+   stored in a team archive which is shared by all members.
 
 ## Admin view
 
@@ -28,6 +30,13 @@ Administrators have two ways to manage the system:
   be toggled.
 * The command `./maintainer.sh create-admin <user> <pass>` can create an initial
   admin account on the command line.
+
+## Team management
+
+The creator of a team becomes its head and can invite members from the
+"Manage Team" page. Every team has its own archive directory and keeps the most
+recent ten uploads (configurable via the `ARCHIVE_LIMIT_TEAM` environment
+variable).
 
 ## Setup using `maintainer.sh`
 
