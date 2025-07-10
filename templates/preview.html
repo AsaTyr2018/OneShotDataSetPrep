@@ -10,24 +10,93 @@
             color: #e0e0e0;
             font-family: 'Roboto', sans-serif;
         }
+        .matrix {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 33vw;
+            pointer-events: none;
+            z-index: 0;
+        }
+        #matrix-left { left: 0; }
+        #matrix-right { right: 0; transform: scaleX(-1); }
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 10px;
+            position: relative;
+            z-index: 1;
         }
         img {
             max-width: 100%;
             border: 1px solid #333;
+            cursor: pointer;
+        }
+        #modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        #modal img {
+            max-width: 90vw;
+            max-height: 90vh;
         }
     </style>
 </head>
-<body class="p-6 text-center">
-    <h1 class="text-3xl mb-4">Preview {{ dataset.filename }}</h1>
+<body class="p-6 text-center overflow-x-hidden">
+    <canvas id="matrix-left" class="matrix"></canvas>
+    <canvas id="matrix-right" class="matrix"></canvas>
+    <div id="modal" class="hidden" onclick="this.classList.add('hidden')">
+        <img src="" alt="Zoomed preview">
+    </div>
+    <h1 class="text-3xl mb-4 relative z-10">Preview {{ dataset.filename }}</h1>
     <div class="grid">
         {% for f in files %}
-        <img src="{{ url_for('preview', dataset_id=dataset.id, file=f) }}" alt="{{ f }}">
+        <img src="{{ url_for('preview', dataset_id=dataset.id, file=f) }}" alt="{{ f }}" onclick="openModal(this.src)">
         {% endfor %}
     </div>
     <p class="mt-4"><a class="text-teal-300" href="{{ url_for('team_archive', team_id=dataset.team_id) if dataset.team_id else url_for('index') }}">Back</a></p>
+    <script>
+    function startMatrix(canvas) {
+        const ctx = canvas.getContext('2d');
+        const fontSize = 16;
+        const width = canvas.offsetWidth;
+        const height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        const columns = Math.floor(width / fontSize);
+        const drops = Array(columns).fill(1);
+        function draw() {
+            ctx.fillStyle = 'rgba(0,0,0,0.05)';
+            ctx.fillRect(0,0,width,height);
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px monospace';
+            for (let i=0;i<drops.length;i++) {
+                const char = String.fromCharCode(0x30A0 + Math.random()*96);
+                ctx.fillText(char, i*fontSize, drops[i]*fontSize);
+                if (drops[i]*fontSize > height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(draw, 50);
+    }
+
+    function openModal(src) {
+        const modal = document.getElementById('modal');
+        modal.querySelector('img').src = src;
+        modal.classList.remove('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        startMatrix(document.getElementById('matrix-left'));
+        startMatrix(document.getElementById('matrix-right'));
+    });
+    </script>
 </body>
 </html>
