@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Team</title>
+    <link rel="stylesheet" href="/static/tailwind.min.css">
+</head>
+<body class="text-center p-8">
+    <h1 class="text-3xl mb-4">Manage {{ team.name }}</h1>
+    <form action="{{ url_for('add_member', team_id=team.id) }}" method="POST" class="space-y-2 inline-block mb-6">
+        <input type="text" name="username" placeholder="Add member by username" required class="p-2 border">
+        <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded">Add</button>
+    </form>
+    <ul class="mb-4">
+    {% for m in members %}
+        <li>{{ m.username }}</li>
+    {% endfor %}
+    </ul>
+    <p><a class="text-teal-300" href="{{ url_for('index') }}">Back</a></p>
+</body>
+</html>

@@ -36,7 +36,15 @@ app.config["SECRET_KEY"] = "replace-me"
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
-from .models import db as models_db, User, Dataset, DatasetShare, Setting
+from .models import (
+    db as models_db,
+    User,
+    Dataset,
+    DatasetShare,
+    Setting,
+    Team,
+    TeamMember,
+)
 
 models_db.init_app(app)
 
@@ -52,6 +60,24 @@ def load_user(user_id):
 
 ARCHIVE_DIR = Path(__file__).resolve().parent.parent / "archives"
 ARCHIVE_DIR.mkdir(exist_ok=True)
+
+ARCHIVE_LIMIT_USER = int(os.getenv("ARCHIVE_LIMIT_USER", "10"))
+ARCHIVE_LIMIT_TEAM = int(os.getenv("ARCHIVE_LIMIT_TEAM", "10"))
+
+
+def cleanup_archives(owner_id: int, team_id: int | None = None) -> None:
+    limit = ARCHIVE_LIMIT_TEAM if team_id else ARCHIVE_LIMIT_USER
+    q = Dataset.query.filter_by(owner_id=owner_id, team_id=team_id).order_by(
+        Dataset.timestamp.desc()
+    )
+    datasets = q.all()
+    base_dir = ARCHIVE_DIR / f"team_{team_id}" if team_id else ARCHIVE_DIR
+    for old_ds in datasets[limit:]:
+        path = base_dir / old_ds.filename
+        DatasetShare.query.filter_by(dataset_id=old_ds.id).delete()
+        models_db.session.delete(old_ds)
+        models_db.session.commit()
+        path.unlink(missing_ok=True)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -91,16 +117,63 @@ def logout():
     return redirect(url_for("login"))
 
 
+@app.route("/teams/create", methods=["GET", "POST"])
+@login_required
+def create_team():
+    if request.method == "POST":
+        name = request.form.get("name")
+        if not name:
+            return "Invalid", 400
+        team = Team(name=name, owner_id=current_user.id)
+        models_db.session.add(team)
+        models_db.session.commit()
+        models_db.session.add(TeamMember(team_id=team.id, user_id=current_user.id))
+        models_db.session.commit()
+        return redirect(url_for("manage_team", team_id=team.id))
+    return render_template("create_team.html")
+
+
+@app.route("/teams/<int:team_id>", methods=["GET"])
+@login_required
+def manage_team(team_id: int):
+    team = Team.query.get_or_404(team_id)
+    if team.owner_id != current_user.id:
+        return "Forbidden", 403
+    members = (
+        User.query.join(TeamMember, TeamMember.user_id == User.id)
+        .filter(TeamMember.team_id == team_id)
+        .all()
+    )
+    return render_template("manage_team.html", team=team, members=members)
+
+
+@app.route("/teams/<int:team_id>/add", methods=["POST"])
+@login_required
+def add_member(team_id: int):
+    team = Team.query.get_or_404(team_id)
+    if team.owner_id != current_user.id:
+        return "Forbidden", 403
+    username = request.form.get("username")
+    user = User.query.filter_by(username=username).first()
+    if user and not TeamMember.query.filter_by(team_id=team_id, user_id=user.id).first():
+        models_db.session.add(TeamMember(team_id=team_id, user_id=user.id))
+        models_db.session.commit()
+    return redirect(url_for("manage_team", team_id=team_id))
+
+
 @app.route("/", methods=["GET"])
 @login_required
 def index():
     """Render upload form page with archive list."""
-    owned = Dataset.query.filter_by(owner_id=current_user.id)
+    owned = Dataset.query.filter_by(owner_id=current_user.id, team_id=None)
+    team_ids = [m.team_id for m in TeamMember.query.filter_by(user_id=current_user.id)]
+    team_datasets = Dataset.query.filter(Dataset.team_id.in_(team_ids)) if team_ids else []
     shared_ids = [s.dataset_id for s in DatasetShare.query.filter_by(user_id=current_user.id)]
     shared = Dataset.query.filter(Dataset.id.in_(shared_ids)) if shared_ids else []
-    datasets = list(owned) + list(shared)
+    datasets = list(owned) + list(shared) + list(team_datasets)
     datasets = datasets[-10:]
-    return render_template("index.html", datasets=datasets)
+    teams = Team.query.join(TeamMember).filter(TeamMember.user_id==current_user.id).all()
+    return render_template("index.html", datasets=datasets, teams=teams)
 
 @app.route("/upload", methods=["POST"])
 @login_required
@@ -109,6 +182,17 @@ def upload():
     file = request.files.get("image")
     if not file or file.filename == "":
         return "No file provided", 400
+
+    team_id_raw = request.form.get("team_id")
+    team_id = int(team_id_raw) if team_id_raw else None
+    if team_id:
+        membership = TeamMember.query.filter_by(team_id=team_id, user_id=current_user.id).first()
+        if not membership:
+            return "Forbidden", 403
+        team_dir = ARCHIVE_DIR / f"team_{team_id}"
+        team_dir.mkdir(exist_ok=True)
+    else:
+        team_dir = ARCHIVE_DIR
 
     img = Image.open(file.stream)
     base_name = Path(file.filename).stem
@@ -126,22 +210,15 @@ def upload():
     timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
     random_part = random.randint(0, 99999)
     archive_name = f"{current_user.username}_{timestamp}_{random_part:05}.zip"
-    archive_path = ARCHIVE_DIR / archive_name
+    archive_path = team_dir / archive_name
     with open(archive_path, "wb") as f:
         f.write(zip_buffer.getvalue())
 
-    dataset = Dataset(filename=archive_name, owner_id=current_user.id)
+    dataset = Dataset(filename=archive_name, owner_id=current_user.id, team_id=team_id)
     models_db.session.add(dataset)
     models_db.session.commit()
 
-    archives = sorted(ARCHIVE_DIR.glob("*.zip"), key=os.path.getmtime, reverse=True)
-    for old in archives[10:]:
-        dataset = Dataset.query.filter_by(filename=old.name).first()
-        if dataset:
-            DatasetShare.query.filter_by(dataset_id=dataset.id).delete()
-            models_db.session.delete(dataset)
-            models_db.session.commit()
-        old.unlink(missing_ok=True)
+    cleanup_archives(current_user.id, team_id)
 
     return redirect(url_for("index"))
 
@@ -157,7 +234,10 @@ def download(filename: str):
     )
     if not allowed:
         return "Forbidden", 403
-    return send_from_directory(ARCHIVE_DIR, filename, as_attachment=True)
+    base_dir = ARCHIVE_DIR
+    if dataset.team_id:
+        base_dir = base_dir / f"team_{dataset.team_id}"
+    return send_from_directory(base_dir, filename, as_attachment=True)
 
 
 @app.route("/share/<int:dataset_id>", methods=["POST"])
@@ -182,7 +262,8 @@ def delete_dataset(dataset_id: int):
     if not dataset or dataset.owner_id != current_user.id:
         return "Forbidden", 403
 
-    path = ARCHIVE_DIR / dataset.filename
+    base_dir = ARCHIVE_DIR / f"team_{dataset.team_id}" if dataset.team_id else ARCHIVE_DIR
+    path = base_dir / dataset.filename
     path.unlink(missing_ok=True)
     DatasetShare.query.filter_by(dataset_id=dataset_id).delete()
     models_db.session.delete(dataset)
@@ -226,6 +307,8 @@ def admin_delete_user(user_id: int):
     if user:
         DatasetShare.query.filter_by(user_id=user.id).delete()
         Dataset.query.filter_by(owner_id=user.id).delete()
+        TeamMember.query.filter_by(user_id=user.id).delete()
+        Team.query.filter_by(owner_id=user.id).delete()
         models_db.session.delete(user)
         models_db.session.commit()
     return redirect(url_for("admin_users"))
