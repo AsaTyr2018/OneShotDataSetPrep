@@ -78,12 +78,63 @@
                 Drop image here or click to select
                 <input id="file-input" type="file" name="image" accept="image/*" required class="hidden">
             </div>
+            <div id="progress-container" class="hidden mt-4">
+                <div class="w-full bg-gray-700 rounded h-4">
+                    <div id="progress-bar" class="bg-teal-500 h-4 rounded" style="width:0%"></div>
+                </div>
+                <p id="progress-phase" class="mt-2 text-sm text-teal-300"></p>
+            </div>
         </form>
         <script>
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('upload-form');
             const input = document.getElementById('file-input');
             const drop = document.getElementById('drop-area');
+            const progress = document.getElementById('progress-container');
+            const bar = document.getElementById('progress-bar');
+            const phaseText = document.getElementById('progress-phase');
+
+            function updateProgress(pct, phase) {
+                bar.style.width = pct + '%';
+                phaseText.textContent = `${phase} - ${Math.round(pct)}%`;
+            }
+
+            function startUpload(file) {
+                const xhr = new XMLHttpRequest();
+                const data = new FormData();
+                data.append('image', file);
+                xhr.open('POST', '/upload');
+                xhr.withCredentials = true;
+
+                progress.classList.remove('hidden');
+                updateProgress(0, 'Uploading');
+
+                let processingInterval;
+
+                xhr.upload.addEventListener('progress', e => {
+                    if (e.lengthComputable) {
+                        const pct = (e.loaded / e.total) * 50;
+                        updateProgress(pct, 'Uploading');
+                    }
+                });
+
+                xhr.upload.addEventListener('load', () => {
+                    let pct = 50;
+                    updateProgress(pct, 'Processing');
+                    processingInterval = setInterval(() => {
+                        pct = Math.min(pct + 1, 90);
+                        updateProgress(pct, 'Processing');
+                    }, 200);
+                });
+
+                xhr.addEventListener('load', () => {
+                    clearInterval(processingInterval);
+                    updateProgress(100, 'Packing');
+                    setTimeout(() => window.location.reload(), 500);
+                });
+
+                xhr.send(data);
+            }
 
             ['dragenter','dragover'].forEach(evt => {
                 drop.addEventListener(evt, e => {
@@ -99,9 +150,9 @@
             });
 
             drop.addEventListener('drop', e => {
+                e.preventDefault();
                 if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    input.files = e.dataTransfer.files;
-                    form.submit();
+                    startUpload(e.dataTransfer.files[0]);
                 }
             });
 
@@ -109,7 +160,7 @@
 
             input.addEventListener('change', () => {
                 if (input.files.length) {
-                    form.submit();
+                    startUpload(input.files[0]);
                 }
             });
         });
