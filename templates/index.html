@@ -35,7 +35,19 @@
     {% else %}
     <p class="mb-4"><a class="text-teal-300" href="{{ url_for('login') }}">Login</a>{% if registration_enabled %} or <a class="text-teal-300" href="{{ url_for('register') }}">Register</a>{% endif %}</p>
     {% endif %}
-    <div class="flex flex-col md:flex-row justify-center md:space-x-8 space-y-8 md:space-y-0">
+    <div class="flex flex-col items-center space-y-8">
+        <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data" class="bg-gray-800 bg-opacity-50 p-6 rounded shadow-lg">
+            <div id="drop-area" class="mb-4 border-2 border-dashed border-gray-600 p-6 rounded cursor-pointer text-gray-400">
+                Drop image here or click to select
+                <input id="file-input" type="file" name="image" accept="image/*" required class="hidden">
+            </div>
+            <div id="progress-container" class="hidden mt-4">
+                <div class="w-full bg-gray-700 rounded h-4">
+                    <div id="progress-bar" class="bg-teal-500 h-4 rounded" style="width:0%"></div>
+                </div>
+                <p id="progress-phase" class="mt-2 text-sm text-teal-300"></p>
+            </div>
+        </form>
         <div>
             <h2 class="text-2xl font-semibold mb-4 text-pink-400">Archive</h2>
             <table class="table-auto border-collapse bg-gray-800 bg-opacity-50 rounded">
@@ -64,18 +76,6 @@
                 </tbody>
             </table>
         </div>
-        <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data" class="bg-gray-800 bg-opacity-50 p-6 rounded shadow-lg">
-            <div id="drop-area" class="mb-4 border-2 border-dashed border-gray-600 p-6 rounded cursor-pointer text-gray-400">
-                Drop image here or click to select
-                <input id="file-input" type="file" name="image" accept="image/*" required class="hidden">
-            </div>
-            <div id="progress-container" class="hidden mt-4">
-                <div class="w-full bg-gray-700 rounded h-4">
-                    <div id="progress-bar" class="bg-teal-500 h-4 rounded" style="width:0%"></div>
-                </div>
-                <p id="progress-phase" class="mt-2 text-sm text-teal-300"></p>
-            </div>
-        </form>
         <script>
         function startMatrix(canvas) {
             const ctx = canvas.getContext('2d');
