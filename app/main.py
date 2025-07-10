@@ -121,6 +121,8 @@ def logout():
 @app.route("/teams/create", methods=["GET", "POST"])
 @login_required
 def create_team():
+    if not (current_user.is_admin or current_user.can_create_team):
+        return "Forbidden", 403
     if request.method == "POST":
         name = request.form.get("name")
         if not name:
@@ -344,6 +346,14 @@ def admin_users():
         elif action == "toggle_registration":
             enabled = request.form.get("registration_enabled") == "on"
             Setting.set_bool("registration_enabled", enabled)
+            return redirect(url_for("admin_users"))
+        elif action == "update_perms":
+            user_id = int(request.form.get("user_id", 0))
+            allow = request.form.get("can_create_team") == "on"
+            user = User.query.get(user_id)
+            if user:
+                user.can_create_team = allow
+                models_db.session.commit()
             return redirect(url_for("admin_users"))
     users = User.query.all()
     reg_enabled = Setting.get_bool("registration_enabled", True)
