@@ -73,10 +73,48 @@
                 </tbody>
             </table>
         </div>
-        <form action="/upload" method="POST" enctype="multipart/form-data" class="bg-gray-800 bg-opacity-50 p-6 rounded shadow-lg">
-            <input type="file" name="image" accept="image/*" required class="mb-4 block w-full text-gray-200 bg-gray-900 p-2 border border-gray-700 rounded">
+        <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data" class="bg-gray-800 bg-opacity-50 p-6 rounded shadow-lg">
+            <div id="drop-area" class="mb-4 border-2 border-dashed border-gray-600 p-6 rounded cursor-pointer text-gray-400">
+                Drop image here or click to select
+                <input id="file-input" type="file" name="image" accept="image/*" required class="hidden">
+            </div>
             <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded transition-colors">Upload & Generate ZIP</button>
         </form>
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('upload-form');
+            const input = document.getElementById('file-input');
+            const drop = document.getElementById('drop-area');
+
+            ['dragenter','dragover'].forEach(evt => {
+                drop.addEventListener(evt, e => {
+                    e.preventDefault();
+                    drop.classList.add('border-pink-500');
+                });
+            });
+            ['dragleave','drop'].forEach(evt => {
+                drop.addEventListener(evt, e => {
+                    e.preventDefault();
+                    drop.classList.remove('border-pink-500');
+                });
+            });
+
+            drop.addEventListener('drop', e => {
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    input.files = e.dataTransfer.files;
+                    form.submit();
+                }
+            });
+
+            drop.addEventListener('click', () => input.click());
+
+            input.addEventListener('change', () => {
+                if (input.files.length) {
+                    form.submit();
+                }
+            });
+        });
+        </script>
     </div>
 </body>
 </html>
