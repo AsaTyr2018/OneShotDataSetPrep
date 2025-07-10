@@ -13,9 +13,19 @@
     </form>
     <ul class="mb-4">
     {% for m in members %}
-        <li>{{ m.username }}</li>
+        <li>
+            {{ m.username }}
+            {% if m.id != team.owner_id %}
+            <form action="{{ url_for('remove_member', team_id=team.id, user_id=m.id) }}" method="POST" class="inline ml-2">
+                <button type="submit" class="bg-red-600 text-white px-2 py-1 rounded">Remove</button>
+            </form>
+            {% endif %}
+        </li>
     {% endfor %}
     </ul>
+    <form action="{{ url_for('delete_team', team_id=team.id) }}" method="POST" class="mb-4">
+        <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded">Delete Team</button>
+    </form>
     <p><a class="text-teal-300" href="{{ url_for('index') }}">Back</a></p>
 </body>
 </html>
