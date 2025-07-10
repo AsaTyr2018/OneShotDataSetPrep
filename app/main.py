@@ -290,6 +290,15 @@ def upload():
     with open(archive_path, "wb") as f:
         f.write(zip_buffer.getvalue())
 
+    # save preview images for quick browsing
+    archive_base = archive_name[:-4]
+    preview_dir = team_dir / archive_base
+    preview_dir.mkdir(exist_ok=True)
+    for filename, buffer in result_images:
+        buffer.seek(0)
+        with open(preview_dir / filename, "wb") as out:
+            out.write(buffer.read())
+
     dataset = Dataset(filename=archive_name, owner_id=current_user.id, team_id=team_id)
     models_db.session.add(dataset)
     models_db.session.commit()
@@ -319,6 +328,30 @@ def download(filename: str):
     return send_from_directory(base_dir, filename, as_attachment=True)
 
 
+@app.route("/preview/<int:dataset_id>")
+@login_required
+def preview(dataset_id: int):
+    """Show a gallery of preview images or serve a specific preview image."""
+    dataset = Dataset.query.get_or_404(dataset_id)
+    allowed = dataset.owner_id == current_user.id or (
+        dataset.team_id
+        and TeamMember.query.filter_by(team_id=dataset.team_id, user_id=current_user.id).first()
+    )
+    if not allowed:
+        return "Forbidden", 403
+
+    base_dir = ARCHIVE_DIR / (
+        f"team_{dataset.team_id}" if dataset.team_id else f"user_{dataset.owner_id}"
+    )
+    preview_dir = base_dir / dataset.filename[:-4]
+    filename = request.args.get("file")
+    if filename:
+        return send_from_directory(preview_dir, filename)
+
+    files = sorted([p.name for p in preview_dir.iterdir() if p.is_file()])
+    return render_template("preview.html", files=files, dataset=dataset)
+
+
 
 
 @app.route("/delete/<int:dataset_id>", methods=["POST"])
@@ -335,6 +368,8 @@ def delete_dataset(dataset_id: int):
         base_dir = ARCHIVE_DIR / f"user_{dataset.owner_id}"
     path = base_dir / dataset.filename
     path.unlink(missing_ok=True)
+    preview_dir = base_dir / dataset.filename[:-4]
+    shutil.rmtree(preview_dir, ignore_errors=True)
     DatasetShare.query.filter_by(dataset_id=dataset_id).delete()
     models_db.session.delete(dataset)
     models_db.session.commit()

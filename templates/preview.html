@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Preview</title>
+    <link rel="stylesheet" href="/static/tailwind.min.css">
+    <style>
+        body {
+            background: #0d0d0d;
+            color: #e0e0e0;
+            font-family: 'Roboto', sans-serif;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        img {
+            max-width: 100%;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body class="p-6 text-center">
+    <h1 class="text-3xl mb-4">Preview {{ dataset.filename }}</h1>
+    <div class="grid">
+        {% for f in files %}
+        <img src="{{ url_for('preview', dataset_id=dataset.id, file=f) }}" alt="{{ f }}">
+        {% endfor %}
+    </div>
+    <p class="mt-4"><a class="text-teal-300" href="{{ url_for('team_archive', team_id=dataset.team_id) if dataset.team_id else url_for('index') }}">Back</a></p>
+</body>
+</html>

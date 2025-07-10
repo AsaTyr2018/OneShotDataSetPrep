@@ -16,11 +16,14 @@ directed to the upload page.
    (`archives/team_<id>`). Each user may keep up to ten personal datasets while
    every team can store fifty by default. The page refreshes after processing so the ZIP can be
    downloaded from the archive list.
-3. **Deletion** – Users remove old datasets themselves once the quota is
+3. **Previewing** – Every upload also stores the generated images under
+   `archives/<user|team>_<id>/<archive_name>` without the `.zip` suffix.
+   Opening `/preview/<dataset_id>` displays these images in a small gallery.
+4. **Deletion** – Users remove old datasets themselves once the quota is
    reached.
-4. **Teams** – Team creation is restricted to administrators or users with the
+5. **Teams** – Team creation is restricted to administrators or users with the
    `can_create_team` permission. Uploads may be stored in a shared team archive
-   that all members can access. 
+   that all members can access.
 
 ## Admin view
 
