@@ -279,6 +279,10 @@ def download(filename: str):
     allowed = dataset and (
         dataset.owner_id == current_user.id
         or DatasetShare.query.filter_by(dataset_id=dataset.id, user_id=current_user.id).first()
+        or (
+            dataset.team_id
+            and TeamMember.query.filter_by(team_id=dataset.team_id, user_id=current_user.id).first()
+        )
     )
     if not allowed:
         return "Forbidden", 403
