@@ -20,7 +20,7 @@ directed to the upload page.
    reached.
 4. **Teams** – Team creation is restricted to administrators or users with the
    `can_create_team` permission. Uploads may be stored in a shared team archive
-   that all members can access. Personal dataset sharing has been removed.
+   that all members can access. 
 
 ## Admin view
 
