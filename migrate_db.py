@@ -10,7 +10,10 @@ def run_migrations() -> None:
         inspector = inspect(db.engine)
         cols = [c["name"] for c in inspector.get_columns("dataset")]
         if "team_id" not in cols:
-            db.engine.execute(text("ALTER TABLE dataset ADD COLUMN team_id INTEGER"))
+            db.session.execute(
+                text("ALTER TABLE dataset ADD COLUMN team_id INTEGER")
+            )
+            db.session.commit()
         db.create_all()
 
 
