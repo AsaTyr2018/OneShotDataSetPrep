@@ -21,6 +21,7 @@ from pathlib import Path
 import os
 import random
 from datetime import datetime
+import shutil
 
 from .processing import crop_and_flip
 
@@ -159,6 +160,53 @@ def add_member(team_id: int):
         models_db.session.add(TeamMember(team_id=team_id, user_id=user.id))
         models_db.session.commit()
     return redirect(url_for("manage_team", team_id=team_id))
+
+
+@app.route("/teams/<int:team_id>/remove/<int:user_id>", methods=["POST"])
+@login_required
+def remove_member(team_id: int, user_id: int):
+    team = Team.query.get_or_404(team_id)
+    if team.owner_id != current_user.id:
+        return "Forbidden", 403
+    if user_id == current_user.id:
+        return "Invalid", 400
+    TeamMember.query.filter_by(team_id=team_id, user_id=user_id).delete()
+    models_db.session.commit()
+    return redirect(url_for("manage_team", team_id=team_id))
+
+
+@app.route("/teams/<int:team_id>/delete", methods=["POST"])
+@login_required
+def delete_team(team_id: int):
+    team = Team.query.get_or_404(team_id)
+    if team.owner_id != current_user.id:
+        return "Forbidden", 403
+    datasets = Dataset.query.filter_by(team_id=team_id).all()
+    base_dir = ARCHIVE_DIR / f"team_{team_id}"
+    for ds in datasets:
+        (base_dir / ds.filename).unlink(missing_ok=True)
+        DatasetShare.query.filter_by(dataset_id=ds.id).delete()
+        models_db.session.delete(ds)
+    TeamMember.query.filter_by(team_id=team_id).delete()
+    models_db.session.delete(team)
+    models_db.session.commit()
+    shutil.rmtree(base_dir, ignore_errors=True)
+    return redirect(url_for("index"))
+
+
+@app.route("/teams/<int:team_id>/archive", methods=["GET"])
+@login_required
+def team_archive(team_id: int):
+    team = Team.query.get_or_404(team_id)
+    membership = TeamMember.query.filter_by(team_id=team_id, user_id=current_user.id).first()
+    if not membership:
+        return "Forbidden", 403
+    datasets = (
+        Dataset.query.filter_by(team_id=team_id)
+        .order_by(Dataset.timestamp.desc())
+        .all()
+    )
+    return render_template("team_archive.html", team=team, datasets=datasets)
 
 
 @app.route("/", methods=["GET"])

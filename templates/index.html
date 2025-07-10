@@ -84,6 +84,22 @@
                 </tbody>
             </table>
         </div>
+        <div>
+            <h2 class="text-2xl font-semibold mt-8 mb-4 text-pink-400">Teams</h2>
+            <ul>
+            {% for t in teams %}
+                <li class="mb-2">
+                    <span class="font-semibold">{{ t.name }}</span>
+                    <a class="ml-2 text-teal-300" href="{{ url_for('team_archive', team_id=t.id) }}">Team Archive</a>
+                    {% if t.owner_id == current_user.id %}
+                    <a class="ml-2 text-teal-300" href="{{ url_for('manage_team', team_id=t.id) }}">Team bearbeiten</a>
+                    {% endif %}
+                </li>
+            {% else %}
+                <li>No teams</li>
+            {% endfor %}
+            </ul>
+        </div>
         <script>
         function startMatrix(canvas) {
             const ctx = canvas.getContext('2d');

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Team Archive</title>
+    <link rel="stylesheet" href="/static/tailwind.min.css">
+</head>
+<body class="text-center p-8">
+    <h1 class="text-3xl mb-4">{{ team.name }} Archive</h1>
+    <table class="table-auto mx-auto border-collapse bg-gray-800 bg-opacity-50 rounded">
+        <thead>
+            <tr><th class="px-4 py-2 border border-gray-700">Dataset</th></tr>
+        </thead>
+        <tbody>
+        {% for ds in datasets %}
+            <tr>
+                <td class="border border-gray-700 px-4 py-2 text-left">
+                    <a href="{{ url_for('download', filename=ds.filename) }}" class="text-teal-300 hover:underline">{{ ds.filename }}</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr><td class="border border-gray-700 px-4 py-2">No datasets</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <p class="mt-4"><a class="text-teal-300" href="{{ url_for('index') }}">Back</a></p>
+</body>
+</html>
