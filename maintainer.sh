@@ -28,6 +28,9 @@ update() {
     fi
     git -C "$APP_DIR" pull
     "$VENV/bin/pip" install -r "$APP_DIR/requirements.txt"
+    if [ -f "$APP_DIR/migrate_db.py" ]; then
+        "$VENV/bin/python" "$APP_DIR/migrate_db.py"
+    fi
     if [ $was_active -eq 1 ]; then
         systemctl restart oneshot.service
     fi
