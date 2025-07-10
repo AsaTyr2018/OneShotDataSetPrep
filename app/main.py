@@ -63,22 +63,7 @@ ARCHIVE_DIR = Path(__file__).resolve().parent.parent / "archives"
 ARCHIVE_DIR.mkdir(exist_ok=True)
 
 ARCHIVE_LIMIT_USER = int(os.getenv("ARCHIVE_LIMIT_USER", "10"))
-ARCHIVE_LIMIT_TEAM = int(os.getenv("ARCHIVE_LIMIT_TEAM", "10"))
-
-
-def cleanup_archives(owner_id: int, team_id: int | None = None) -> None:
-    limit = ARCHIVE_LIMIT_TEAM if team_id else ARCHIVE_LIMIT_USER
-    q = Dataset.query.filter_by(owner_id=owner_id, team_id=team_id).order_by(
-        Dataset.timestamp.desc()
-    )
-    datasets = q.all()
-    base_dir = ARCHIVE_DIR / f"team_{team_id}" if team_id else ARCHIVE_DIR
-    for old_ds in datasets[limit:]:
-        path = base_dir / old_ds.filename
-        DatasetShare.query.filter_by(dataset_id=old_ds.id).delete()
-        models_db.session.delete(old_ds)
-        models_db.session.commit()
-        path.unlink(missing_ok=True)
+ARCHIVE_LIMIT_TEAM = int(os.getenv("ARCHIVE_LIMIT_TEAM", "50"))
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -215,15 +200,32 @@ def team_archive(team_id: int):
 @login_required
 def index():
     """Render upload form page with archive list."""
-    owned = Dataset.query.filter_by(owner_id=current_user.id, team_id=None)
+    owned = list(
+        Dataset.query.filter_by(owner_id=current_user.id, team_id=None)
+        .order_by(Dataset.timestamp.desc())
+        .all()
+    )
     team_ids = [m.team_id for m in TeamMember.query.filter_by(user_id=current_user.id)]
-    team_datasets = Dataset.query.filter(Dataset.team_id.in_(team_ids)) if team_ids else []
-    shared_ids = [s.dataset_id for s in DatasetShare.query.filter_by(user_id=current_user.id)]
-    shared = Dataset.query.filter(Dataset.id.in_(shared_ids)) if shared_ids else []
-    datasets = list(owned) + list(shared) + list(team_datasets)
-    datasets = datasets[-10:]
-    teams = Team.query.join(TeamMember).filter(TeamMember.user_id==current_user.id).all()
-    return render_template("index.html", datasets=datasets, teams=teams)
+    team_datasets = (
+        Dataset.query.filter(Dataset.team_id.in_(team_ids))
+        .order_by(Dataset.timestamp.desc())
+        .all()
+        if team_ids
+        else []
+    )
+    datasets = owned + list(team_datasets)
+    teams = Team.query.join(TeamMember).filter(TeamMember.user_id == current_user.id).all()
+    personal_count = len(owned)
+    team_data = [(t, Dataset.query.filter_by(team_id=t.id).count()) for t in teams]
+    return render_template(
+        "index.html",
+        datasets=datasets,
+        teams=teams,
+        personal_count=personal_count,
+        team_data=team_data,
+        personal_limit=ARCHIVE_LIMIT_USER,
+        team_limit=ARCHIVE_LIMIT_TEAM,
+    )
 
 @app.route("/upload", methods=["POST"])
 @login_required
@@ -239,10 +241,15 @@ def upload():
         membership = TeamMember.query.filter_by(team_id=team_id, user_id=current_user.id).first()
         if not membership:
             return "Forbidden", 403
+        if Dataset.query.filter_by(team_id=team_id).count() >= ARCHIVE_LIMIT_TEAM:
+            return "Team quota reached", 400
         team_dir = ARCHIVE_DIR / f"team_{team_id}"
         team_dir.mkdir(exist_ok=True)
     else:
-        team_dir = ARCHIVE_DIR
+        if Dataset.query.filter_by(owner_id=current_user.id, team_id=None).count() >= ARCHIVE_LIMIT_USER:
+            return "Personal quota reached", 400
+        team_dir = ARCHIVE_DIR / f"user_{current_user.id}"
+        team_dir.mkdir(exist_ok=True)
 
     img = Image.open(file.stream)
     base_name = Path(file.filename).stem
@@ -268,8 +275,6 @@ def upload():
     models_db.session.add(dataset)
     models_db.session.commit()
 
-    cleanup_archives(current_user.id, team_id)
-
     return redirect(url_for("index"))
 
 
@@ -280,7 +285,6 @@ def download(filename: str):
     dataset = Dataset.query.filter_by(filename=filename).first()
     allowed = dataset and (
         dataset.owner_id == current_user.id
-        or DatasetShare.query.filter_by(dataset_id=dataset.id, user_id=current_user.id).first()
         or (
             dataset.team_id
             and TeamMember.query.filter_by(team_id=dataset.team_id, user_id=current_user.id).first()
@@ -291,21 +295,11 @@ def download(filename: str):
     base_dir = ARCHIVE_DIR
     if dataset.team_id:
         base_dir = base_dir / f"team_{dataset.team_id}"
+    else:
+        base_dir = base_dir / f"user_{dataset.owner_id}"
     return send_from_directory(base_dir, filename, as_attachment=True)
 
 
-@app.route("/share/<int:dataset_id>", methods=["POST"])
-@login_required
-def share(dataset_id: int):
-    username = request.form.get("username")
-    user = User.query.filter_by(username=username).first()
-    dataset = Dataset.query.get(dataset_id)
-    if not user or not dataset or dataset.owner_id != current_user.id:
-        return "Not allowed", 400
-    if not DatasetShare.query.filter_by(dataset_id=dataset_id, user_id=user.id).first():
-        models_db.session.add(DatasetShare(dataset_id=dataset_id, user_id=user.id))
-        models_db.session.commit()
-    return redirect(url_for("index"))
 
 
 @app.route("/delete/<int:dataset_id>", methods=["POST"])
@@ -316,7 +310,10 @@ def delete_dataset(dataset_id: int):
     if not dataset or dataset.owner_id != current_user.id:
         return "Forbidden", 403
 
-    base_dir = ARCHIVE_DIR / f"team_{dataset.team_id}" if dataset.team_id else ARCHIVE_DIR
+    if dataset.team_id:
+        base_dir = ARCHIVE_DIR / f"team_{dataset.team_id}"
+    else:
+        base_dir = ARCHIVE_DIR / f"user_{dataset.owner_id}"
     path = base_dir / dataset.filename
     path.unlink(missing_ok=True)
     DatasetShare.query.filter_by(dataset_id=dataset_id).delete()

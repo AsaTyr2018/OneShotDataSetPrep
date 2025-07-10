@@ -11,15 +11,16 @@ management. All binary dependencies are installed via the supplied
    create accounts using the maintainer script. After logging in they are
 directed to the upload page.
 2. **Uploading** – Drag and drop an image onto the form. The server generates 14
-   cropped and flipped images, stores them as a ZIP file and keeps the ten most
-   recent archives for each user. The page refreshes after processing so the ZIP
-   can be downloaded from the archive list.
-3. **Sharing** – The owner of an archive can share it with another registered
-   user by entering their username. Shared datasets appear in both users'
-   archive list.
-4. **Deletion** – Each user can delete the datasets they own at any time.
-5. **Teams** – A user can create a team and invite other members. Uploads may be
-   stored in a team archive which is shared by all members.
+   cropped and flipped images and stores them as a ZIP file in the user's
+   personal directory or the selected team directory. Each user may keep up to
+   ten personal datasets while every team can store fifty datasets. The page
+   refreshes after processing so the ZIP can be downloaded from the archive
+   list.
+3. **Deletion** – Users remove old datasets themselves once the quota is
+   reached.
+4. **Teams** – A user can create a team and invite other members. Uploads may be
+   stored in a team archive which is shared by all members. Personal dataset
+   sharing has been removed.
 
 ## Admin view
 
@@ -34,9 +35,8 @@ Administrators have two ways to manage the system:
 ## Team management
 
 The creator of a team becomes its head and can invite members from the
-"Manage Team" page. Every team has its own archive directory and keeps the most
-recent ten uploads (configurable via the `ARCHIVE_LIMIT_TEAM` environment
-variable).
+"Manage Team" page. Every team has its own archive directory and may store up to
+fifty uploads (configurable via the `ARCHIVE_LIMIT_TEAM` environment variable).
 
 ## Setup using `maintainer.sh`
 
