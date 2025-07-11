@@ -75,7 +75,7 @@
                     {% for ds in datasets %}
                     <tr>
                         <td class="border border-gray-700 px-4 py-2 text-left">
-                            <a href="{{ url_for('download', filename=ds.filename) }}" class="text-teal-300 hover:underline">{{ ds.filename }}</a>
+                            <a href="{{ url_for('download_by_code', filecode=ds.id) }}" class="text-teal-300 hover:underline">{{ ds.filename }}</a>
                             {% if ds.team_id %}<span class="text-xs ml-2 text-gray-400">(Team {{ ds.team.name }})</span>{% endif %}
                             {% if ds.owner_id == current_user.id %}
                             <form action="{{ url_for('delete_dataset', dataset_id=ds.id) }}" method="POST" class="mt-2">

@@ -37,7 +37,7 @@
         {% for ds in datasets %}
             <tr>
                 <td class="border border-gray-700 px-4 py-2 text-left">
-                    <a href="{{ url_for('download', filename=ds.filename) }}" class="text-teal-300 hover:underline">{{ ds.filename }}</a>
+                    <a href="{{ url_for('download_by_code', filecode=ds.id) }}" class="text-teal-300 hover:underline">{{ ds.filename }}</a>
                 </td>
                 <td class="border border-gray-700 px-4 py-2">
                     <a class="text-teal-300 hover:underline" href="{{ url_for('preview', dataset_id=ds.id) }}">Preview</a>
