@@ -328,6 +328,23 @@ def download(filename: str):
     return send_from_directory(base_dir, filename, as_attachment=True)
 
 
+@app.route("/d/<int:filecode>", methods=["GET"])
+@login_required
+def download_by_code(filecode: int):
+    """Download a dataset by ID using a short code."""
+    dataset = Dataset.query.get_or_404(filecode)
+    allowed = dataset.owner_id == current_user.id or (
+        dataset.team_id
+        and TeamMember.query.filter_by(team_id=dataset.team_id, user_id=current_user.id).first()
+    )
+    if not allowed:
+        return "Forbidden", 403
+    base_dir = ARCHIVE_DIR / (
+        f"team_{dataset.team_id}" if dataset.team_id else f"user_{dataset.owner_id}"
+    )
+    return send_from_directory(base_dir, dataset.filename, as_attachment=True)
+
+
 @app.route("/preview/<int:dataset_id>")
 @login_required
 def preview(dataset_id: int):

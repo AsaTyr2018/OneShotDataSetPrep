@@ -61,6 +61,7 @@ def test_team_member_can_download(tmp_path, monkeypatch):
         main.models_db.session.commit()
         team_id = team.id
         filename = ds.filename
+        dataset_id = ds.id
 
     team_dir = tmp_path / f'team_{team_id}'
     team_dir.mkdir(parents=True, exist_ok=True)
@@ -68,5 +69,5 @@ def test_team_member_can_download(tmp_path, monkeypatch):
 
     client = main.app.test_client()
     client.post('/login', data={'username': 'member', 'password': 'b'})
-    resp = client.get(f'/download/{filename}')
+    resp = client.get(f'/d/{dataset_id}')
     assert resp.status_code == 200
