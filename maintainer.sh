@@ -1,8 +1,33 @@
 #!/bin/bash
 
-APP_DIR="/opt/OneShot"
+is_docker() {
+    [ -f "/.dockerenv" ] && return 0
+    grep -qE '(docker|lxc)' /proc/1/cgroup 2>/dev/null
+}
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if is_docker; then
+    APP_DIR="$SCRIPT_DIR"
+else
+    APP_DIR="/opt/OneShot"
+fi
 VENV="$APP_DIR/venv"
 REPO="https://github.com/AsaTyr2018/OneShotDataSetPrep.git"
+
+python_cmd() {
+    if [ -x "$VENV/bin/python" ]; then
+        echo "$VENV/bin/python"
+    elif is_docker; then
+        command -v python3 || command -v python
+    fi
+}
+
+ensure_installed() {
+    [ -d "$VENV" ] && return 0
+    is_docker && return 0
+    echo "Not installed" >&2
+    return 1
+}
 
 install() {
     if [ -d "$APP_DIR" ]; then
@@ -41,15 +66,15 @@ uninstall() {
 }
 
 start() {
-    [ -d "$VENV" ] || { echo "Not installed" >&2; return; }
-    "$VENV/bin/python" "$APP_DIR/run.py"
+    ensure_installed || return
+    "$(python_cmd)" "$APP_DIR/run.py"
 }
 
 create_admin() {
-    [ -d "$VENV" ] || { echo "Not installed" >&2; return; }
+    ensure_installed || return
     local user=$1
     local pass=$2
-    "$VENV/bin/python" - <<PY
+    "$(python_cmd)" - <<PY
 from app.models import db, User
 from app.main import app
 from werkzeug.security import generate_password_hash
