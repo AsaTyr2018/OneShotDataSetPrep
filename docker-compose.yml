@@ -1,0 +1,12 @@
+services:
+  oneshotdatasetprep:
+    image: asatyr2024/mythosmachina:oneshotdatasetprep
+    container_name: oneshotdatasetprep
+    ports:
+      - "7860:7860"
+    volumes:
+      - ../archives:/app/archives
+      - ../config.json:/app/config/config.json
+    command: >
+      sh -c "ln -sf /app/config/config.json /app/config.json && python3 run.py"
+    restart: unless-stopped
