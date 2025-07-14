@@ -49,7 +49,9 @@ the personal archive.
 ## Setup using `maintainer.sh`
 
 The application is meant to be installed through the maintainer script. Run all
-commands with suitable privileges if installing system wide.
+commands with suitable privileges if installing system wide. When running
+inside the provided Docker container the script automatically detects the
+environment so `create-admin` and `start` work without calling `install` first.
 
 ```bash
 # clone into /opt/OneShot and install dependencies
