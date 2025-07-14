@@ -90,3 +90,19 @@ python run.py
 The web interface will be available on port `7860` by default.  To change the
 port, edit ``config.json`` and set the ``"port"`` value before running the
 application.
+
+## Docker deployment
+
+A prebuilt image is available for running the application in a container. After cloning this repository simply start the service with Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+Once the container is running create an initial admin account with:
+
+```bash
+docker exec oneshotdatasetprep ./maintainer.sh create-admin <user> <password>
+```
+
+The web interface will then be reachable on port `7860`.
